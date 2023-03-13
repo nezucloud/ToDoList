@@ -1,31 +1,103 @@
-import { createApp, ref, watchEffect } from "vue";
+import {
+  createApp,
+  ref,
+  watchEffect,
+  nextTick,
+  reactive,
+  onMounted,
+} from "vue";
 
-import AddNewTaskForm from "./forms/add-new-task-form";
+import TaskForm from "./forms/task-form";
 import BaseCheckboxInput from "./forms-input/base-checkbox-input";
-import { GET_TASKS, UPDATE_TASK } from "./services/tasks";
+import { DELETE_TASK, GET_TASKS, UPDATE_TASK } from "./services/tasks";
+import AddButton from "./components/button/add-button";
+import EditButton from "./components/button/edit-button";
+import LogoutButton from "./components/button/logout-button";
+import DeleteButton from "./components/button/delete-button";
 
 import { toastSuccess } from "../lib/toast";
 import "dayjs";
+import { Modal } from "bootstrap";
+import { USER_SHOW } from "./services/users";
 
 createApp({
   setup() {
+    // Filter
     const sortBy = ref("due_date");
-    const tasks = ref([]);
+    const filterBy = ref("today");
+    const hideFinished = ref(false);
 
-    const options = [
+    const tasks = ref([]);
+    const user = ref({});
+
+    const openModal = ref(false);
+    const modal = ref(null);
+    const editData = ref({});
+    const formOptions = reactive({ requestMethod: "POST" });
+
+    onMounted(() => {
+      USER_SHOW().then((res) => {
+        user.value = res.data.data;
+      });
+    });
+
+    function openFormModal() {
+      openModal.value = !openModal.value;
+      nextTick(() => {
+        modal.value = new Modal("#modalAddTask");
+        if (openModal.value) return modal.value.show();
+      });
+    }
+
+    function onFormModalDismiss() {
+      openModal.value = !openModal.value;
+    }
+
+    function handleAddButtonClick() {
+      editData.value = {};
+      formOptions.requestMethod = "POST";
+      openFormModal();
+    }
+
+    function handleEditButtonClick(params) {
+      editData.value = params;
+      formOptions.requestMethod = "PATCH";
+      nextTick(() => {
+        openFormModal();
+      });
+    }
+
+    function handleAfterSubmit() {
+      invalidateTasks();
+      modal.value.hide();
+      setTimeout(() => {
+        openModal.value = !openModal.value;
+      }, 250);
+    }
+
+    const optionsOrder = [
       { key: "due_date", value: "Due Date" },
-      { key: "status", value: "Status" },
       { key: "priority", value: "Priority" },
+      { key: "status", value: "Status" },
     ];
 
-    async function getTasks() {
-      return GET_TASKS(`sortby=${sortBy.value}`).then((response) => {
+    const optionsFilter = [
+      { key: "today", value: "Due Today" },
+      { key: "all", value: "all" },
+    ];
+
+    async function invalidateTasks() {
+      return GET_TASKS(
+        `sortby=${sortBy.value}&filterby=${filterBy.value}&hide_finished=${
+          hideFinished.value ? true : false
+        }`
+      ).then((response) => {
         tasks.value = response.data.data;
       });
     }
 
     watchEffect(async () => {
-      await getTasks();
+      await invalidateTasks();
     });
 
     async function handleMarkDone(event) {
@@ -39,41 +111,99 @@ createApp({
       });
     }
 
-    return { options, tasks, sortBy, dayjs, handleMarkDone };
+    async function handleDeleteData(task, event, modal) {
+      event.target.disabled = true;
+      return DELETE_TASK(task.id).then((res) => {
+        invalidateTasks();
+        toastSuccess(res.data.message);
+        modal.hide();
+      });
+    }
+
+    return {
+      user,
+      optionsFilter,
+      optionsOrder,
+      tasks,
+      sortBy,
+      filterBy,
+      dayjs,
+      hideFinished,
+      handleMarkDone,
+      onFormModalDismiss,
+      handleAddButtonClick,
+      handleEditButtonClick,
+      handleAfterSubmit,
+      handleDeleteData,
+      formOptions,
+      editData,
+      openModal,
+      modal,
+    };
   },
-  components: { AddNewTaskForm, BaseCheckboxInput },
+  components: {
+    TaskForm,
+    BaseCheckboxInput,
+    AddButton,
+    EditButton,
+    LogoutButton,
+    DeleteButton,
+  },
   template: `
   <div class="container-fluid p-3">
     <div class="row">
 
-      <div class="col-12">
-        <h2 class="text-center bg-light rounded-1 py-1">TASK LIST</h2>
-      </div>
-
-      <div class="col-sm-2 mb-2">
-        <AddNewTaskForm />
-      </div> 
-
-      <div class="col-sm-10">
-        <div class="bg-light rounded-1">
-          <div class="row">
-
-            <div class="col-md-6 col-lg-4 row">
-              <label for="filter_by" class="col-sm-4 col-form-label text-center">Sort By</label>
-              <div class="col-sm-8 pt-1" >
-                <select class="form-select form-select-sm" id="filter_by" value="due_date" v-model="sortBy">
-                 <option v-for="option in options" :value="option.key"> {{ option.value }}</option>
-                </select>
-              </div>
-            </div>
-
+      <div class="col-12 mb-2">
+        <div class="d-flex justify-content-between bg-light p-1 rounded-1">
+          <h2 class="ms-2">Task List <i>({{ user.email }})</i></h2>
+          <div class="align-self-center d-flex align-items-center gap-3">
+            <a href="/auth/register/edit" class="btn rounded-5">Edit Profile</a>
+            <LogoutButton />
           </div>
         </div>
       </div>
 
       <div class="col-12">
+        
         <div class="card">
           <div class="card-body">
+            <div class="row mb-3">
+
+              <div class="col-sm-2 mb-2">
+                <AddButton @click="handleAddButtonClick" class="w-100" />
+                <TaskForm :open-modal="openModal" v-if="openModal" @on-modal-dismiss="onFormModalDismiss" :initialFormValue="editData" 
+                @after-submit="handleAfterSubmit" :form-options="formOptions"/>
+              </div> 
+
+              <div class="col-sm-10">
+                <div>
+                  <div class="row">
+
+                    <div class="col-md-6 col-lg-4 row">
+                      <label for="order_by" class="col-sm-4 col-form-label text-center">Sort By</label>
+                      <div class="col-sm-8 pt-1" >
+                        <select class="form-select form-select-sm" id="order_by" v-model="sortBy">
+                          <option v-for="option in optionsOrder" :value="option.key"> {{ option.value }}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 row">
+                      <label for="filter_by" class="col-sm-4 col-form-label text-center">Filter By</label>
+                      <div class="col-sm-8 pt-1" >
+                        <select class="form-select form-select-sm" id="filter_by" v-model="filterBy">
+                          <option v-for="option in optionsFilter" :value="option.key"> {{ option.value }}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 pt-2">
+                      <BaseCheckboxInput label="Hide Finished" id="hide_finished" v-model="hideFinished"/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
             <table class="table">
               <thead>
                 <tr>
@@ -81,6 +211,7 @@ createApp({
                   <th scope="col">Title</th>
                   <th scope="col">Description</th>
                   <th scope="col">Due Date</th>
+                  <th scope="col">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,6 +222,10 @@ createApp({
                   <td>{{ task.title }}</td>
                   <td>{{ task.description }}</td>
                   <td>{{ dayjs(task.due_date) }}</td>
+                  <td>
+                    <EditButton @click="handleEditButtonClick(task)"/>
+                    <DeleteButton class="ms-2" @on-delete="(event, modal) => handleDeleteData(task, event, modal)"/>
+                  </td>
                 </tr>
               </tbody>
             </table>

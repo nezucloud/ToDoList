@@ -25,9 +25,9 @@ export default {
     BaseButton,
   },
   template: `
-    <BaseButton class="btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Add new task" @forward-ref="forwardRef">
-        <i class="ti ti-plus"></i>
-        Add New
+    <BaseButton class="btn-info" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Cancel" @forward-ref="forwardRef">
+        <i class="ti ti-x"></i>
+        Cancel
     </BaseButton>
   `,
 };

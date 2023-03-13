@@ -8,6 +8,10 @@ class Users::SessionsController < Devise::SessionsController
     super
   end
 
+  def show
+    return render json: { data: current_user }
+  end
+
   # POST /resource/sign_in
   def create
     super
