@@ -1,5 +1,6 @@
 export default {
-  props: ["label", "id"],
+  props: ["label", "id", "modelValue"],
+  emits: ["update:modelValue"],
   setup(props) {
     const { label, id } = props;
 
@@ -10,11 +11,18 @@ export default {
   },
 
   template: `
-    <div class="form-check">
-        <input class="form-check-input" type="checkbox" :id="id" :name="id">
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" :id="id" :name="id"
+        :checked="modelValue"
+        @change="$emit('update:modelValue', $event.target.checked)"
+        v-bind="$attrs">
         <label class="form-check-label" :for="id">
             {{ label }}
         </label>
+
+        <div class="invalid-feedback">
+          <slot name="invalid" />
+        </div>
     </div>
         `,
 };
