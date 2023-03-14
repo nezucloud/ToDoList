@@ -107,6 +107,7 @@ createApp({
         id: value,
         status: checked ? "finished" : "process",
       }).then((res) => {
+        invalidateTasks();
         toastSuccess(res.data.message);
       });
     }
