@@ -83,7 +83,7 @@ createApp({
 
     const optionsFilter = [
       { key: "today", value: "Due Today" },
-      { key: "all", value: "all" },
+      { key: "all", value: "All" },
     ];
 
     async function invalidateTasks() {
