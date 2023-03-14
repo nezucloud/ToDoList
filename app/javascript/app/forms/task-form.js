@@ -29,9 +29,9 @@ export default {
       formData.id = id;
       formData.title = title ?? "";
       formData.description = description ?? "";
-      formData.due_date =
-        dayjs(due_date).format("YYYY-MM-DDTHH:mm") ??
-        dayjs().format("YYYY-MM-DDTHH:mm:ss");
+      formData.due_date = due_date
+        ? dayjs(due_date).subtract(7, "hour").format("YYYY-MM-DDTHH:mm")
+        : dayjs().format("YYYY-MM-DDTHH:mm:ss");
       formData.priority = 1 ?? false;
       formData.status = status ?? "process";
     });

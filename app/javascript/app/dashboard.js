@@ -221,7 +221,7 @@ createApp({
                   </th>
                   <td>{{ task.title }}</td>
                   <td>{{ task.description }}</td>
-                  <td>{{ dayjs(task.due_date) }}</td>
+                  <td>{{ dayjs(task.due_date).subtract(7, 'hour').format('MMMM D, YYYY h:mm A') }}</td>
                   <td>
                     <EditButton @click="handleEditButtonClick(task)"/>
                     <DeleteButton class="ms-2" @on-delete="(event, modal) => handleDeleteData(task, event, modal)"/>
