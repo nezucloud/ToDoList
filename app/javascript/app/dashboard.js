@@ -25,7 +25,7 @@ createApp({
     // Filter
     const sortBy = ref("due_date");
     const filterBy = ref("today");
-    const hideFinished = ref(false);
+    const hideFinished = ref(true);
 
     const tasks = ref([]);
     const user = ref({});
