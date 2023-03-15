@@ -16,8 +16,7 @@ export default {
   props: ["openModal", "initialFormValue", "formOptions"],
   setup(props, context) {
     const { openModal, initialFormValue, formOptions } = props;
-    const { title, description, due_date, priority, id, status } =
-      initialFormValue;
+    const { title, description, due_date, id, status } = initialFormValue;
     const disabledSubmit = ref(false);
 
     const invalid = ref({});
@@ -31,7 +30,7 @@ export default {
       formData.description = description ?? "";
       formData.due_date = due_date
         ? dayjs(due_date).subtract(7, "hour").format("YYYY-MM-DDTHH:mm")
-        : dayjs().format("YYYY-MM-DDTHH:mm:ss");
+        : dayjs().format("YYYY-MM-DDTHH:mm");
       formData.priority = 1 ?? false;
       formData.status = status ?? "process";
     });
