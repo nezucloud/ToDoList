@@ -5,28 +5,20 @@ class TasksController < ApplicationController
         sort_by         = params[:sortby]
         filter_by       = params[:filterby]
         hide_finished   = params[:hide_finished]
+        search_title    = params[:search_title]
 
         @user_tasks = current_user.task
 
         # conditions of the tasks if they have finished
-        if hide_finished == "true"
-            @user_tasks = @user_tasks.where("status != 'finished'")
-        end
+        @user_tasks = @user_tasks.unfinished if hide_finished != "true"
 
         # Conditions of the tasks if they have filtered by today
-        if filter_by == "today"
-            @user_tasks = @user_tasks.where("DATE(due_date) = DATE(NOW())")
-        end
+        @user_tasks = @user_tasks.due_today if filter_by == "today"
+
+        @user_tasks = @user_tasks.title(search_title) unless search_title.empty?
 
         # Case in parameter sort by
-        case sort_by
-            when 'due_date' 
-                @user_tasks = @user_tasks.order(due_date: :asc)
-            when 'status'
-                @user_tasks = @user_tasks.order(status: :desc)
-            else
-                @user_tasks = @user_tasks.where("priority IS NOT NULL").order(priority: :asc)
-            end
+        self.sort_by(sort_by)
 
         # Send response to the client
         return render json: success_respond_object(@user_tasks, "Get user tasks"), status: :ok
@@ -104,5 +96,16 @@ class TasksController < ApplicationController
                 "message"   => message,
                 "status"    => 200
             }
+        end
+
+        def sort_by(sort_by)
+            case sort_by
+                when 'due_date' 
+                    @user_tasks = @user_tasks.order(due_date: :asc)
+                when 'status'
+                    @user_tasks = @user_tasks.order(status: :desc)
+                else
+                    @user_tasks = @user_tasks.where("priority IS NOT NULL").order(priority: :asc)
+                end
         end
 end

@@ -14,6 +14,7 @@ import AddButton from "./components/button/add-button";
 import EditButton from "./components/button/edit-button";
 import LogoutButton from "./components/button/logout-button";
 import DeleteButton from "./components/button/delete-button";
+import BaseTextfieldInput from "./forms-input/base-textfield-input";
 
 import { toastSuccess } from "../lib/toast";
 import "dayjs";
@@ -26,6 +27,7 @@ createApp({
     const sortBy = ref("due_date");
     const filterBy = ref("today");
     const hideFinished = ref(true);
+    const searchTitle = ref("");
 
     const tasks = ref([]);
     const user = ref({});
@@ -90,7 +92,7 @@ createApp({
       return GET_TASKS(
         `sortby=${sortBy.value}&filterby=${filterBy.value}&hide_finished=${
           hideFinished.value ? true : false
-        }`
+        }&search_title=${searchTitle.value}`
       ).then((response) => {
         tasks.value = response.data.data;
       });
@@ -140,6 +142,7 @@ createApp({
       editData,
       openModal,
       modal,
+      searchTitle,
     };
   },
   components: {
@@ -149,6 +152,7 @@ createApp({
     EditButton,
     LogoutButton,
     DeleteButton,
+    BaseTextfieldInput,
   },
   template: `
   <div class="container-fluid p-3">
@@ -180,7 +184,7 @@ createApp({
                 <div>
                   <div class="row">
 
-                    <div class="col-md-6 col-lg-4 row">
+                    <div class="col-md-6 col-lg-3 row">
                       <label for="order_by" class="col-sm-4 col-form-label text-center">Sort By</label>
                       <div class="col-sm-8 pt-1" >
                         <select class="form-select form-select-sm" id="order_by" v-model="sortBy">
@@ -188,7 +192,7 @@ createApp({
                         </select>
                       </div>
                     </div>
-                    <div class="col-md-6 col-lg-4 row">
+                    <div class="col-md-6 col-lg-3 row">
                       <label for="filter_by" class="col-sm-4 col-form-label text-center">Filter By</label>
                       <div class="col-sm-8 pt-1" >
                         <select class="form-select form-select-sm" id="filter_by" v-model="filterBy">
@@ -196,8 +200,11 @@ createApp({
                         </select>
                       </div>
                     </div>
-                    <div class="col-md-6 col-lg-4 pt-2">
+                    <div class="col-md-6 col-lg-3 pt-2">
                       <BaseCheckboxInput label="Hide Finished" id="hide_finished" v-model="hideFinished"/>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                      <BaseTextfieldInput id="search_title" class="form-control-sm" placeholder="Searh By Title" v-model.lazy="searchTitle" :hide-label="true"/>
                     </div>
                   </div>
                 </div>
@@ -212,6 +219,7 @@ createApp({
                   <th scope="col">Title</th>
                   <th scope="col">Description</th>
                   <th scope="col">Due Date</th>
+                  <th scope="col">Status</th>
                   <th scope="col">Action</th>
                 </tr>
               </thead>
@@ -223,6 +231,7 @@ createApp({
                   <td>{{ task.title }}</td>
                   <td>{{ task.description }}</td>
                   <td>{{ dayjs(task.due_date).subtract(7, 'hour').format('MMMM D, YYYY h:mm A') }}</td>
+                  <td>{{ task.status }}</td>
                   <td>
                     <EditButton @click="handleEditButtonClick(task)"/>
                     <DeleteButton class="ms-2" @on-delete="(event, modal) => handleDeleteData(task, event, modal)"/>

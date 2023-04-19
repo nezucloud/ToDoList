@@ -32,7 +32,7 @@ export default {
         ? dayjs(due_date).subtract(7, "hour").format("YYYY-MM-DDTHH:mm")
         : dayjs().format("YYYY-MM-DDTHH:mm");
       formData.priority = 1 ?? false;
-      formData.status = status ?? "process";
+      formData.status = status ?? "draft";
     });
 
     const handleAfterSubmit = () => {
@@ -114,6 +114,7 @@ export default {
               <select class="form-select form-select" id="status" v-model="formData.status" name="task[status]">
                 <option value="process">Process</option>
                 <option value="finished">Finish</option>
+                <option value="draft">Draft</option>
               </select>
 
             </form>
