@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
+  get 'articles/index'
   root "pages#index"
+
+  namespace :admin do
+    resources :news
+  end
 
   # Get files assets
   get 'files/assets/images/:file_name', to: "assets#images"
@@ -12,6 +17,9 @@ Rails.application.routes.draw do
   get 'task/show', to: "tasks#show"
   patch 'task/update', to: "tasks#update"
   delete 'task/delete/:id', to: "tasks#delete"
+
+  # Articles  
+  get 'articles', to: "articles#index"
 
   # Users
   devise_for :users, path: 'auth', path_names: { sign_in: 'login', sign_out: 'logout', password: 'secret', confirmation: 'verification', unlock: 'unblock', registration: 'register', sign_up: 'sign_up' }

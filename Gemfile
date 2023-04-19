@@ -73,3 +73,6 @@ end
 
 # Devise authentication
 gem 'devise'
+
+# Haml
+gem 'haml'
